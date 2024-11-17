@@ -1,0 +1,155 @@
+<style>
+  nav {
+  background: #e03e00;
+  color: #fff;
+  padding: 0.5em 1em;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center; /* Ensure alignment consistency */
+}
+
+nav ul li {
+  margin: 0;
+  position: relative; /* Necessary for dropdown positioning */
+}
+
+nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5em 1em;
+  display: block;
+  transition: background 0.3s ease;
+}
+
+nav ul li a:hover {
+  background: #be3900;
+  border-radius: 4px;
+}
+
+header {
+  background: #421f08;
+  color: white;
+  padding: 1.5em 0;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10vw;
+  background-color: #fff;
+}
+
+header .logo img {
+  height: 70px;
+  margin: 1vh 0;
+}
+
+header .sign-in {
+  background-color: #f04e23;
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.navbar {
+  position: fixed;
+  right:0vw;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  margin-bottom: 4vw;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a shadow to the navbar */
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #333;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #575757;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown a {
+  cursor: pointer; /* Ensure the dropdown trigger looks clickable */
+}
+
+</style>
+    <link
+      rel="stylesheet"
+      href="/all.min.css"
+    />
+
+<div class="navbar">
+  <header>
+    <a class="logo" href="/">
+      <img
+        src="/images.png"  alt="ONGC Logo"
+      />
+    </a>
+    
+    {{#if user}}
+    <a href="/logout" class="sign-in">Logout</a>
+    {{else}}
+    <a href="/login" class="sign-in">Sign in</a>
+    {{/if}}
+  </header>
+{{#if user}}
+    <nav>
+      <ul>
+        <li>
+          <a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        </li>
+        <li><a href="/monthlyreport"><i class="fas fa-calendar-alt"></i>
+          Monthly Report</a></li>
+        <li>
+          <a href="/emp_master"><i class="fas fa-users"></i> Employee Data</a>
+        </li>
+        <li>
+          <a href="/leavereport"
+            ><i class="fa-solid fa-table-list" style="color: #ffffff;"></i> Sitewise Attendance Summary</a
+          >
+        </li>
+        <li class="dropdown">
+          <a><i class="fa-solid fa-caret-down" style="color: #ffffff;"></i> More</a>
+          <div class="dropdown-content">
+            <a href="/leaveinfo"><i class="fa-solid fa-circle-info" style="color: #ffffff;font-color:black "></i>Applied Leaves</a>
+            <a href="/tourinfo"><i class="fa-solid fa-circle-info" style="color: #ffffff;font-color:black "></i>Apllied Tour Leaves</a>
+            <a href="/punching"><i class="fas fa-clock"></i> Punching Data</a>
+          </div>
+        </li>
+      </ul>
+    </nav>
+  {{/if}}
+</div>

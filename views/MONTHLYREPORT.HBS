@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    body {
+      margin-top: 24vh;
+    }
+    .search-container {
+      width: 100%;
+      position: relative;
+      margin: 4vh 0 4vh 0;
+      display: none;
+      justify-content: space-between;
+    }
+    #searchID {
+      height: 5vh;
+      border-radius: 20px;
+      width: 92%;
+      text-indent: 40px;
+    }
+    .searchicon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #lp {
+      margin: 20px auto;
+      width: 80%;
+      border-collapse: collapse;
+    }
+    #lp h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+    #lp table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #lp caption {
+      font-weight: bold;
+      padding: 5px;
+      text-align: left;
+    }
+    
+    #lp th,
+    #lp td {
+      background-color: #ffffff;
+      padding: 10px;
+      text-align: center;
+    }
+    #lp td{
+       border-left: 1px  solid #ddd;
+       border-right: 1px  solid #ddd;
+    }
+    #lp th {
+      height: 10vh;
+      background-color:#912900;
+      color: white;
+    }
+    .pagination {
+      display: none;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      border: none;
+      background-color: #343a40;
+      color: white;
+      cursor: pointer;
+    }
+    th,td{
+      width:7vw ;
+    }
+    .pagination button.disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #filterForm {
+      font-style: oblique;
+      font-family;
+      margin-bottom: 5vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+    }
+    #record_date {
+      width: 10vw;
+      height: 5vh;
+      border-radius: 10px;
+      text-indent: 5px;
+    }
+    .stats {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin:4vw;
+    }
+    .stat-item {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .stat-item h3 {
+      font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .stat-item p {
+      font-size: 1.5rem;
+      margin-top: 5px;
+    }
+    #barchart,#Linechart {
+      width: 30vw;
+      margin: 0 auto;
+      margin-top: 4vh;
+      text-align: center;
+    }
+    .charts{
+      justify-content: left;
+      display: flex;
+    }
+    .loc{
+      font-style: italic;
+      font-weight: bold;
+      font-family:monospace;
+      margin: 5vh;
+      width:11vw;
+      transform: translateX(300%);
+    }
+    .sort-icon {
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+.sort-icon.asc::before {
+  content: "\u25B2"; /* Unicode for up arrow */
+}
+.sort-icon.desc::before {
+  content: "\u25BC"; /* Unicode for down arrow */
+} 
+.download{
+      text-decoration: none;
+      border-radius: 20px;
+      padding: 11px;
+      color: white;
+      background-color: red;
+    }
+    button{
+      text-decoration: none;
+      background-color: transparent;
+      border: none;
+    }
+    .tableflex{
+      display: none;
+      height: fit-content;
+      justify-content: space-between;
+
+    }
+    #stattable td{
+      border: 1px  solid #ddd;
+    }
+    #lp{
+      min-height: 55.2vh;
+    }
+    #datatable{
+      display: none;
+    }
+    input[type='date'] {
+      background-color: #0080ff;
+      font-family: "Roboto Mono", monospace;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      outline: none;
+      text-align: center;
+      width: 10vw;
+      border-radius: 5px;
+      color: white;
+      margin-left: 5px;
+    }
+    ::-webkit-calendar-picker-indicator {
+      background-color: white;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .sort-icon{
+      font-size: smaller;
+    }
+        #time1, #time2{
+      width: 100px;
+      height: 30px;
+      font-size: 1rem;
+      text-align: center;
+      border-radius: 10px;
+      border-color:#600000;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+</head>
+<body>
+  {{>navbar}}
+  <section id="lp">
+    <h2>{{title}}</h2>
+    <br>
+    <br>
+    <form id="filterForm" method="GET" action="/monthlyreport" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">
+      <div class="formflex" style="display: flex;">
+      <label for="location" style="font-size: 1.2rem; margin-top:1.2vh; margin-right:10px">Select Site:</label>
+      <select id="location" name="site" style="border-radius: 20px;">
+        <option value="">All Sites</option>
+        <!-- Add location options dynamically -->
+        {{#each sites}}
+          <option value="{{this.site_name}}" {{#ifEquals this.site_name ../selectedLocation}}selected{{/ifEquals}}>{{this.site_name}}</option>
+        {{/each}}
+      </select>
+      <div>
+        <label for="fromDate" style="margin-left: 10px;">From Date:</label>
+        <input type="date" id="fromDate" name="fromDate" required>
+      </div>
+      <div>
+        <label for="toDate" style="margin-left: 10px;">To Date:</label>
+        <input type="date" id="toDate" name="toDate" required>
+      </div>
+</div>
+<br>
+<div class="timeform">
+   <label for="time1" style="font-size: 1.3rem;">Time 1:</label>
+      <input type="time" id="time1" value="{{time1}}" name="time1" />
+      <label for="time2" style="font-size: 1.3rem;">Time 2:</label>
+      <input type="time" id="time2" name="time2" value="{{time2}}" />
+</div>
+<br>
+      <button type="submit" class="download" style="cursor: pointer;">Generate Report</button>
+    </form>
+
+
+    {{!-- <div class="stats">
+      <div class="stat-item">
+        <h3>Total Employees</h3>
+        <p>{{statistics.totalEmployees}}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Total Punches</h3>
+        <p>{{statistics.totalPunches}}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Leaves Applied</h3>
+        <p>{{statistics.totalLeaveDays}}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Tour Leaves Applied</h3>
+        <p>{{statistics.totalTourDays}}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Total EACS Absent Days</h3>
+        <p>{{statistics.totalEACSAbsentDays}}</p>
+      </div>
+    </div> --}}
+    <div class="tableflex" style="font-style:italic; font-family:'Times New Roman', Times, serif">
+<table id="stattable" style="width: 40vw;height:fit-content; font-size:16px">
+  <thead>
+    <tr>
+      <th style="border-top-left-radius:20px;">Employee Level</th>
+      <th>Late Punches</th>
+    </tr>
+  </thead>
+  <tbody>
+      {{#each statistics.levelWiseLatePunches}}
+      <tr>
+        <td style="background-color:antiquewhite;">{{this.EmployeeLevel}}</td>
+        <td>{{this.LatePunches}}</td>
+      </tr>
+      {{/each}}
+      
+      <tr>
+        <td style="color:white; background-color:rgb(219, 122, 11)">Total Officers</td>
+        <td style="color:white; background-color:rgb(219, 122, 11)">{{statistics.sumlevelwiseofE.LatePunches}}</td>
+      </tr>
+      <tr style="border-bottom-left-radius:20px;">
+        <td style="color:white; background-color:rgb(219, 122, 11)">Staff</td>
+        <td style="color:white; background-color:rgb(219, 122, 11)">{{statistics.sumlevelwiseofothers.LatePunches}}</td>
+      </tr>
+  </tbody>
+</table>
+          <table style="border-collapse: collapse; width: 35vw; height:10vh; text-align: center;" id="stattable">
+  <thead>
+    <tr>
+      <th colspan="3" style="background-color: #344d1b; font-size: 18px; padding: 10px;">Late Punches Profile</th>
+    </tr>
+    <tr>
+      <th style="background-color: #547632; padding: 10px;"><p style="position: relative;top:2.1vw; font-size:1.1rem">% of Days in Month</p></th>
+      <th colspan="2" style="background-color: #547632; padding: 10px;">% Employees in Band</th>
+    </tr>
+    <tr>
+      <th style="background-color: #547632"></th>
+      <th style="background-color: #6c9147; padding: 10px;">Beyond 10:00</th>
+      <th style="background-color: #6c9147; padding: 10px;">Beyond 10:15</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each latePunchesStatistics}}
+    <!-- Example row with data -->
+    <tr>
+      <td style="background-color:antiquewhite; padding: 10px;">{{@key}}</td>
+      <td style="background-color: #ffffff; padding: 10px;">{{this.Beyond10}}</td>
+      <td style="background-color: #ffffff; padding: 10px;">{{this.Beyond1015}}</td>
+    </tr>
+    <!-- Repeat for additional rows -->
+    {{/each}}
+  </tbody>
+</table>
+<table style="width: 40vw; border-collapse: collapse; font-size: 16px;" id="stattable">
+    <thead>
+        <tr>
+            <th colspan="2" style="text-align: center; background-color: #841c3b; padding: 10px; font-size: 24px; border-top-right-radius:20px;">Summary</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="padding: 10px; background-color:antiquewhite">No. of Working Days in the month:</td>
+            <td style="padding: 10px; ">{{statistics.summary.No_of_Working_Days_in_the_Month}}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;background-color:antiquewhite">Total Employees in the month:</td>
+            <td style="padding: 10px;">{{statistics.summary.Total_Employees_in_the_Month}}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: center; background-color: #841c3b; font-weight: bold; color:white;">TOTAL LATE PUNCHES DURING THE MONTH</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color:antiquewhite">No. of Times beyond Time1</td>
+            <td style="padding: 10px;"> {{statistics.summary.No_of_Times_beyond_Time1}}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;background-color:antiquewhite ">No. of Times beyond Time2</td>
+            <td style="padding: 10px;"> {{statistics.summary.No_of_Times_beyond_Time2}}</td>
+        </tr>
+    </tbody>
+</table>
+
+
+    </div>
+
+     
+    <div class="search-container">
+      <input type="text" id="searchID" placeholder="Enter ID or Name">
+      <span class="searchicon"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <a class="download" id="download-link" href="#">Download</a>
+    </div>
+    <table id="datatable">
+      <thead style=" position: sticky;
+  top: 135px; /* Adjust this if you have a navbar */
+  background-color: white; /* Make sure the background is set to prevent overlap issues */
+  z-index: 999; /* Keeps the header above other content */
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);">
+        <tr style="cursor: default;user-select: none;">
+      <th style="font-size: 14px;" onclick="sortTable(0,this)">CPF NO<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(1,this)">Name<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(2,this)">Designation<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(3,this)">Department<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(4,this)">Site<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(5,this)">No. of Days Beyond {{time1}}<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(6,this)">Total Time Delay Beyond {{time1}}<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(7,this)">No. of Days Beyond {{time2}}<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(8,this)">Total Time Delay Beyond {{time2}}<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(9,this)">Total EACS Absent Days<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(10,this)">Total Leave Days<span class="sort-icon">▲▼</span></th>
+      <th style="font-size: 14px;" onclick="sortTable(11,this)">Total Days On Tour<span class="sort-icon">▲▼</span></th>
+    </tr>
+      </thead>
+      <tbody id="lp-table-body">
+        {{#each data}}
+          <tr>
+            <td>{{this.employee_id}}</td>
+            <td>{{this.first_name}} {{this.middle_name}} {{this.last_name}}</td>
+            <td>{{this.employee_designation_type_name}}</td>
+            {{!-- <td>{{this.Level}}</td> --}}
+            {{!-- <td>{{this.Section}}</td> --}}
+            <td>{{this.department_name}}</td>
+            <td>{{this.site_name}}</td>
+            <td>{{this.NoOfDaysBeyond10}}</td>
+            <td>{{this.TotalTimeDelayBeyond10}}</td>
+            <td>{{this.NoOfDaysBeyond1015}}</td>
+            <td>{{this.TotalTimeDelayBeyond1015}}</td>
+            <td>{{this.TotalEACSAbsentDays}}</td>
+            <td>{{this.TotalLeaveDays}}</td>
+            <td>{{this.TotalDaysOnTour}}</td>
+          </tr>
+        {{/each}}
+      <hr class="hr" style="display: none;">
+      </tbody>
+    </table>
+    <div class="pagination">
+      <button id="prevBtn" class="disabled" onclick="prevPage()">Previous</button>
+      <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </section>
+  {{>footer}}
+
+<script>
+const rowsPerPage = 20;
+let currentPage = 1;
+const tableBody = document.getElementById('lp-table-body');
+const rows = Array.from(tableBody.getElementsByTagName('tr'));
+let filteredRows = [...rows]; // This will store the filtered rows
+let sortedRows = [...filteredRows]; // This will store the sorted version of filtered rows
+
+// Function to calculate the total number of pages
+function getTotalPages() {
+  return Math.ceil(sortedRows.length / rowsPerPage);
+}
+
+// Function to display rows on the current page
+function displayPage(page) {
+  tableBody.innerHTML = '';
+  const start = (page - 1) * rowsPerPage;
+  const end = Math.min(start + rowsPerPage, sortedRows.length);
+
+  for (let i = start; i < end; i++) {
+    tableBody.appendChild(sortedRows[i]);
+  }
+
+  document.getElementById('prevBtn').classList.toggle('disabled', page === 1);
+  document.getElementById('nextBtn').classList.toggle('disabled', page === getTotalPages());
+}
+
+// Pagination control functions
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayPage(currentPage);
+  }
+}
+
+function nextPage() {
+  if (currentPage < getTotalPages()) {
+    currentPage++;
+    displayPage(currentPage);
+  }
+}
+
+// Function to sort the table
+function sortTable(columnIndex, headerElement) {
+  const dir = headerElement.dataset.sortDir === 'desc' ? 'asc' : 'desc';
+  headerElement.dataset.sortDir = dir;
+
+  const isNumeric = (value) => !isNaN(value) && value.trim() !== '';
+  const isTime = (value) => value.includes(':');
+
+  sortedRows.sort((a, b) => {
+    const xContent = a.getElementsByTagName('TD')[columnIndex].textContent.trim();
+    const yContent = b.getElementsByTagName('TD')[columnIndex].textContent.trim();
+
+    let comparison = 0;
+
+    if (isNumeric(xContent) && isNumeric(yContent)) {
+      comparison = parseFloat(xContent) - parseFloat(yContent);
+    } else if (isTime(xContent) && isTime(yContent)) {
+      const xTime = new Date('1970-01-01T' + xContent + 'Z').getTime();
+      const yTime = new Date('1970-01-01T' + yContent + 'Z').getTime();
+      comparison = xTime - yTime;
+    } else {
+      comparison = xContent.localeCompare(yContent);
+    }
+
+    return dir === 'asc' ? comparison : -comparison;
+  });
+
+  // Reset all header icons
+  document.querySelectorAll("#datatable th .sort-icon").forEach(icon => {
+    icon.textContent = "▲▼";
+  });
+
+  // Update the header icon based on the sorting direction
+  const icon = headerElement.querySelector(".sort-icon");
+  icon.textContent = dir === 'asc' ? "▲" : "▼";
+
+  displayPage(currentPage); // Redisplay the sorted rows on the current page
+}
+
+// Function to handle search
+document.getElementById('searchID').addEventListener('input', function () {
+  const searchValue = this.value.toLowerCase();
+  filteredRows = rows.filter(row => {
+    const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    const section = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+    return id.includes(searchValue) || name.includes(searchValue) || section.includes(searchValue);
+  });
+
+  sortedRows = [...filteredRows]; // Update sortedRows to match the filteredRows
+  
+  currentPage = 1; // Reset to the first page
+  displayPage(currentPage); // Display the first page of filtered results
+  document.getElementById('prevBtn').classList.add('disabled');
+  document.getElementById('nextBtn').classList.toggle('disabled', sortedRows.length <= rowsPerPage);
+});
+
+// Initial display of the first page
+displayPage(currentPage);
+</script>
+
+
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+    // Function to get query parameters
+    function getQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        const queryParams = {};
+        for (const [key, value] of params.entries()) {
+            queryParams[key] = value;
+        }
+        return queryParams;
+    }
+
+    // Function to handle display based on query parameters
+    function handleDisplayBasedOnParams() {
+        const queryParams = getQueryParams();
+        {{!-- const statsSection = document.querySelector('.stats'); --}}
+        const tableFlex = document.querySelector('.tableflex');
+        const search = document.querySelector('.search-container');
+        const pagination = document.querySelector('.pagination');
+        const hr = document.querySelector('.hr');
+        const datatable = document.getElementById('datatable');
+
+        if (Object.keys(queryParams).length > 0) {
+            // Show elements if query parameters exist
+            {{!-- statsSection.style.display = 'grid'; --}}
+            tableFlex.style.display = 'flex';
+            search.style.display = 'block';
+            pagination.style.display = 'flex';
+            datatable.style.display = 'block';
+            hr.style.display = 'block';
+        } else {
+            // Hide elements if no query parameters
+            {{!-- statsSection.style.display = 'none'; --}}
+            tableFlex.style.display = 'none';
+            search.style.display = 'none';
+            pagination.style.display = 'none';
+            datatable.style.display = 'none';
+            hr.style.display = 'none';
+        }
+    }
+
+    // Call the function to handle display
+    handleDisplayBasedOnParams();
+});
+
+
+function getURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    location: params.get('site') || '',
+    fromdate: params.get('fromdate') || '',
+    todate: params.get('todate') || ''
+  };
+}
+
+window.onload = function() {
+  const params = getURLParams();
+  document.getElementById('location').value = params.location;
+  document.getElementById('fromDate').value = params.fromdate;
+  document.getElementById('toDate').value = params.todate;
+};
+
+
+</script> 
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const time1 = urlParams.get('time1') || '10:00:00';
+      const time2 = urlParams.get('time2') || '10:15:00';
+      const site=urlParams.get('site')||'All Sites';
+      const fromdate=urlParams.get('fromDate');
+      const todate=urlParams.get('toDate');
+      // Construct the download link with the appropriate query parameters
+      const downloadLink = `/download/monthlyreport?site=${encodeURIComponent(site)}&fromDate=${encodeURIComponent(fromdate)}&toDate=${encodeURIComponent(todate)}&time1=${encodeURIComponent(time1)}&time2=${encodeURIComponent(time2)}`;
+
+      // Update the href attribute of the download link
+      document.getElementById('download-link').href = downloadLink;
+    });
+  </script>
+
+</body>
+</html>

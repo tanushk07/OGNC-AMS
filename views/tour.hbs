@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    body {
+      margin-top: 24vh;
+    }
+    .search-container {
+      width: 100%;
+      position: relative;
+      margin: 4vh 0 4vh 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    #searchID {
+      height: 5vh;
+      border-radius: 20px;
+      width: 92%;
+      text-indent: 40px;
+    }
+    .searchicon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #tourinfo{
+      margin: 20px auto;
+      width: 80%;
+      border-collapse: collapse;
+    }
+    #tourinfo h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    #tourinfo table {
+      width: 100%;
+      border: 1px solid #ddd;
+    }
+    #tourinfo caption {
+      font-weight: bold;
+      padding: 5px;
+      text-align: left;
+    }
+    #tourinfo th,
+    #tourinfo td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    #tourinfo th {
+      background-color: #f2f2f2;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      border: none;
+      background-color: #343a40;
+      color: white;
+      cursor: pointer;
+    }
+    .pagination button.disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .updateinfo, .addholiday {
+      width: 5vw;
+      height: 4vh;
+      border-radius: 20px;
+      border: none;
+      color: white;
+      background-color: #f04e23;
+      cursor: pointer;
+    }
+    #holidayList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .hollist {
+      display: none;
+      justify-content: center;
+      padding: 5px;
+      align-items: center;
+      width: fit-content;
+      border: 3px dotted grey;
+      border-radius: 20px;
+      background-color: #f9f9f9;
+    }
+    #holidayList li {
+      list-style-type: none;
+      background-color: #f04e23;
+      color: white;
+      border: 1px solid grey;
+      padding: 5px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .crossbtn {
+      border: none;
+      background-color: transparent;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    input[type='date'] {
+      background-color: #0080ff;
+      font-family: "Roboto Mono", monospace;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      outline: none;
+      text-align: center;
+      width: 13vw;
+      border-radius: 5px;
+      color: white;
+    }
+    ::-webkit-calendar-picker-indicator {
+      background-color: white;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .holiday-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .holiday-container label {
+      margin-bottom: 10px;
+    }
+    .flexbox{
+      display: grid;
+      grid-template-columns: .01fr .01fr .01fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .download{
+      text-decoration: none;
+      border-radius: 20px;
+      padding: 11px;
+      color: white;
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  {{>navbar}}
+  <section id="tourinfo">
+    <h2>{{title}}</h2>
+    <div class="holiday-container">
+      <label for="holidays">Select Holidays:</label>
+      <div class="flexbox">
+        <input type="date" id="holidayInput">
+      <button class="addholiday" onclick="addHoliday()">Add Holiday</button>
+    <button class="updateinfo" onclick="fetchTourInfo()">Update Info</button>
+      </div>
+      <div class="hollist"><ul id="holidayList"></ul></div> 
+    </div>
+    <div class="search-container">
+      <input type="text" id="searchID" placeholder="Enter ID or Name">
+      <span class="searchicon"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <a id="download-link" class="download" href="#">Download</a>
+    </div>
+    <table id="datatable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0,this)">PERNR <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(1,this)">Name <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(2,this)">Section <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(3,this)">Level <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(4,this)" style="width: 7vw;">ENDDA <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(5,this)" style="width: 7vw;">BEGDA <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(6,this)">Total Days Excluding Weekends <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(7,this)">Holidays in Between <span class="sort-icon">▲▼</span></th>
+                <th onclick="sortTable(8,this)">Total Days Without Duplication <span class="sort-icon">▲▼</span></th>
+            </tr>
+        </thead>
+        <tbody id="tourinfo-table-body">
+            {{#each data}}
+                <tr>
+                    <td>{{this.PERNR}}</td>
+                    <td>{{this.name}}</td>
+                    <td>{{this.Section}}</td>
+                    <td>{{this.level}}</td>
+                    <td>{{this.ENDDA}}</td>
+                    <td>{{this.BEGDA}}</td>
+                    <td>{{this.TotalTourDaysExcludingWeekends}}</td>
+                    <td>{{this.Holiday}}</td>
+                    <td>{{this.TotalTourDaysWithoutDuplication}}</td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    <div class="pagination">
+        <button id="prevBtn" class="disabled" onclick="prevPage()">Previous</button>
+        <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </section>
+  {{>footer}}
+  <script>
+const rowsPerPage = 20;
+let currentPage = 1;
+const tableBody = document.getElementById('tourinfo-table-body');
+const rows = Array.from(tableBody.getElementsByTagName('tr'));
+let filteredRows = [...rows]; // This will store the filtered rows
+let sortedRows = [...filteredRows]; // This will store the sorted version of filtered rows
+
+// Function to calculate the total number of pages
+function getTotalPages() {
+  return Math.ceil(sortedRows.length / rowsPerPage);
+}
+
+// Function to display rows on the current page
+function displayPage(page) {
+  tableBody.innerHTML = '';
+  const start = (page - 1) * rowsPerPage;
+  const end = Math.min(start + rowsPerPage, sortedRows.length);
+
+  for (let i = start; i < end; i++) {
+    tableBody.appendChild(sortedRows[i]);
+  }
+
+  document.getElementById('prevBtn').classList.toggle('disabled', page === 1);
+  document.getElementById('nextBtn').classList.toggle('disabled', page === getTotalPages());
+}
+
+// Pagination control functions
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayPage(currentPage);
+  }
+}
+
+function nextPage() {
+  if (currentPage < getTotalPages()) {
+    currentPage++;
+    displayPage(currentPage);
+  }
+}
+
+// Function to sort the table
+function sortTable(columnIndex, headerElement) {
+  const dir = headerElement.dataset.sortDir === 'desc' ? 'asc' : 'desc';
+  headerElement.dataset.sortDir = dir;
+
+  const isNumeric = (value) => !isNaN(value) && value.trim() !== '';
+  const isTime = (value) => value.includes(':');
+
+  sortedRows.sort((a, b) => {
+    const xContent = a.getElementsByTagName('TD')[columnIndex].textContent.trim();
+    const yContent = b.getElementsByTagName('TD')[columnIndex].textContent.trim();
+
+    let comparison = 0;
+
+    if (isNumeric(xContent) && isNumeric(yContent)) {
+      comparison = parseFloat(xContent) - parseFloat(yContent);
+    } else if (isTime(xContent) && isTime(yContent)) {
+      const xTime = new Date('1970-01-01T' + xContent + 'Z').getTime();
+      const yTime = new Date('1970-01-01T' + yContent + 'Z').getTime();
+      comparison = xTime - yTime;
+    } else {
+      comparison = xContent.localeCompare(yContent);
+    }
+
+    return dir === 'asc' ? comparison : -comparison;
+  });
+
+  // Reset all header icons
+  document.querySelectorAll("#datatable th .sort-icon").forEach(icon => {
+    icon.textContent = "▲▼";
+  });
+
+  // Update the header icon based on the sorting direction
+  const icon = headerElement.querySelector(".sort-icon");
+  icon.textContent = dir === 'asc' ? "▲" : "▼";
+
+  displayPage(currentPage); // Redisplay the sorted rows on the current page
+}
+
+// Function to handle search
+document.getElementById('searchID').addEventListener('input', function () {
+  const searchValue = this.value.toLowerCase();
+  filteredRows = rows.filter(row => {
+    const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    const designation = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+    const department = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+
+    return id.includes(searchValue) || name.includes(searchValue) || designation.includes(searchValue) || department.includes(searchValue);
+  });
+
+  sortedRows = [...filteredRows]; // Update sortedRows to match the filteredRows
+  
+  currentPage = 1; // Reset to the first page
+  displayPage(currentPage); // Display the first page of filtered results
+  document.getElementById('prevBtn').classList.add('disabled');
+  document.getElementById('nextBtn').classList.toggle('disabled', sortedRows.length <= rowsPerPage);
+});
+
+    function addHoliday() {
+        const holidayInput = document.getElementById('holidayInput');
+        const holidayList = document.getElementById('holidayList');
+        const hollistContainer = document.querySelector('.hollist');
+        if (holidayInput.value) {
+            const li = document.createElement('li');
+            li.innerHTML = `${holidayInput.value} <button class='crossbtn' onclick="removeHoliday(this)"><i class="fa-solid fa-xmark"></i></button>`;
+            holidayList.appendChild(li);
+            holidayInput.value = '';
+            hollistContainer.style.display = 'flex';
+        }
+    }
+
+    function removeHoliday(button) {
+        const hollistContainer = document.querySelector('.hollist');
+        const holidayList = document.getElementById('holidayList');
+        const li = button.parentNode;
+        li.parentNode.removeChild(li);
+        updateURLParams(true);
+        console.log(holidayList.children.length)
+        if (holidayList.children.length === 0) {
+            hollistContainer.style.display = 'none';
+        }
+    }
+
+    function fetchTourInfo() {
+        const searchID = document.getElementById('searchID').value;
+        const holidayList = Array.from(document.getElementById('holidayList').getElementsByTagName('li')).map(li => li.textContent.trim().slice(0, 10)); // Get the dates only
+        const holidays = holidayList.join(',');
+        const url = new URL(window.location.href);
+        url.searchParams.set('holidays', holidays);
+        if (searchID) {
+            url.searchParams.set('searchID', searchID);
+        } else {
+            url.searchParams.delete('searchID');
+        }
+        window.location.href = url;
+    }
+
+    function updateURLParams(reload = false) {
+        const holidayList = Array.from(document.getElementById('holidayList').getElementsByTagName('li')).map(li => li.textContent.trim().slice(0, 10)); // Get the dates only
+        const holidays = holidayList.join(',');
+        const url = new URL(window.location.href);
+        if (holidays) {
+            url.searchParams.set('holidays', holidays);
+        } else {
+            url.searchParams.delete('holidays');
+        }
+        history.replaceState(null, '', url);
+        if (reload) {
+            window.location.href = url; // Reload the page
+        }
+    }
+
+    // Reset filters on page load and maintain holiday list from URL params
+    window.onload = function() {
+        const url = new URL(window.location.href);
+        const holidays = url.searchParams.get('holidays');
+        const hollistContainer = document.querySelector('.hollist');
+        if (holidays) {
+            const holidayList = holidays.split(',');
+            const holidayListElement = document.getElementById('holidayList');
+            holidayListElement.innerHTML = ''; // Clear existing items
+            holidayList.forEach(date => {
+                const li = document.createElement('li');
+                li.innerHTML = `${date} <button class='crossbtn' onclick="removeHoliday(this)"><i class="fa-solid fa-xmark"></i></button>`;
+                holidayListElement.appendChild(li);
+            });
+            hollistContainer.style.display = 'flex';
+        }
+    };
+    displayPage(currentPage);
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const holidays = urlParams.get('holidays') || '';
+      console.log(holidays)
+      // Construct the download link with the appropriate query parameters
+      const downloadLink = `/download/tourinfo?holidays=${encodeURIComponent(holidays)}`;
+      console.log(downloadLink)
+
+      // Update the href attribute of the download link
+      document.getElementById('download-link').href = downloadLink;
+    });
+  </script>
+</body>
+</html>

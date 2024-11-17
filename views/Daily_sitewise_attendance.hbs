@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <style>
+    /* Styles as before */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    body {
+      margin-top: 28vh;
+    }
+    .search-container {
+      width: 100%;
+      position: relative;
+      margin: 4vh 0 4vh 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    #searchID {
+      height: 5vh;
+      border-radius: 20px;
+      width: 92%;
+      text-indent: 40px;
+    }
+    .searchicon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #lp {
+      margin: 20px auto;
+      width: 80%;
+      border-collapse: collapse;
+    }
+    #lp h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+    #lp table {
+      width: 100%;
+      border: 1px solid #ddd;
+    }
+    #lp caption {
+      font-weight: bold;
+      padding: 5px;
+      text-align: left;
+    }
+    #lp th,
+    #lp td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    #lp th {
+      background-color: #f2f2f2;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      border: none;
+      background-color: #343a40;
+      color: white;
+      cursor: pointer;
+    }
+    th,td{
+      white-space: nowrap;
+    }
+    .pagination button.disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #filterForm {
+      width: 100%;
+      margin-bottom: 5vh;
+    }
+    #record_date {
+      width: 10vw;
+      height: 5vh;
+      border-radius: 10px;
+      text-indent: 5px;
+    }
+    .download{
+      text-decoration: none;
+      border-radius: 20px;
+      padding: 11px;
+      color: white;
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  {{>navbar}}
+
+  <section id="lp">
+    <h2>{{title}}</h2>
+    <form id="filterForm" method="GET" action="/leavereport">
+      <label for="location" style="font-size: 1.2rem;">Select Location:</label>
+      <select id="location" name="site">
+        <option value="">All sites</option>
+        <!-- Add location options dynamically -->
+        {{#each sites}}
+          <option value="{{this.site_name}}" {{#ifEquals this.site_name ../selectedLocation}}selected{{/ifEquals}}>{{this.site_name}}</option>
+        {{/each}}
+      </select>
+      <div>
+        <label for="fromDate">From Date:</label>
+        <input type="date" id="fromDate" name="fromDate" required>
+        <button type="submit" class="download">Generate Report</button>
+      </div>
+
+    </form>
+    <div class="search-container">
+      <input type="text" id="searchID" placeholder="Enter ID or Name">
+      <span class="searchicon"><i class="fa-solid fa-magnifying-glass"></i></span>
+    <a href="/download/leavereport" id="download-link" class="download">Download</a>
+    </div>
+    <table id="datatable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Designation</th>
+          <th>Punching Time</th>
+          <th>Late By</th>
+            <th>Location</th>
+            <th>Date</th>
+          
+        </tr>
+      </thead>
+      <tbody id="lp-table-body">
+        {{#each data}}
+          <tr>
+            <td>{{this.Employee_ID}}</td>
+            <td>{{this.Name}}</td>
+            <td>{{this.Designation_TEXT}}</td>
+            <td>{{this.punch_in_time}}</td>
+            <td>{{this.LATEBY}}</td>
+            <td>{{this.Location}}</td>
+            <td>{{this.DATE}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <div class="pagination">
+      <button id="prevBtn" class="disabled" onclick="prevPage()">Previous</button>
+      <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </section>
+  {{>footer}}
+  <script>
+    const rowsPerPage = 20;
+    let currentPage = 1;
+    const tableBody = document.getElementById('lp-table-body');
+    const rows = Array.from(tableBody.getElementsByTagName('tr'));
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+    function displayPage(page) {
+      tableBody.innerHTML = '';
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      for (let i = start; i < end && i < rows.length; i++) {
+        tableBody.appendChild(rows[i]);
+      }
+      document.getElementById('prevBtn').classList.toggle('disabled', page === 1);
+      document.getElementById('nextBtn').classList.toggle('disabled', page === totalPages);
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        displayPage(currentPage);
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        displayPage(currentPage);
+      }
+    }
+
+    document.getElementById('searchID').addEventListener('input', function () {
+      const searchValue = this.value.toLowerCase();
+      const filteredRows = rows.filter(row => {
+        const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+        const name=row.querySelector('td:nth-child(2)').textContent.toLocaleLowerCase();
+        return id.includes(searchValue) || name.includes(searchValue);
+      });
+      tableBody.innerHTML = '';
+      filteredRows.slice(0, rowsPerPage).forEach(row => tableBody.appendChild(row));
+      currentPage = 1;
+      document.getElementById('prevBtn').classList.add('disabled');
+      document.getElementById('nextBtn').classList.toggle('disabled', filteredRows.length <= rowsPerPage);
+    });
+
+    displayPage(currentPage);
+
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const location = urlParams.get('location') || 'ALL LOCATIONS';
+      const date = urlParams.get('record_date') || new Date().toISOString().slice(0, 7); // Default to current month in YYYY-MM format
+
+      // Construct the download link with the appropriate query parameters
+      const downloadLink = `/download/leavereport?location=${encodeURIComponent(location)}&record_date=${encodeURIComponent(date)}`;
+      // Update the href attribute of the download link
+      document.getElementById('download-link').href = downloadLink;
+    });
+  </script>
+</body>
+</html>

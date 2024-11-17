@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Punching Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' />
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    #punching {min-height: 58vh; margin: 20px auto; width: 80%; border-collapse: collapse; }
+    #punching h1 { font-size: 2.5rem; text-align: center;margin-bottom: 10vh; }
+    #punching table { width: 100%; border: 1px solid #ddd; border-collapse: collapse;}
+    #punching caption { font-weight: bold; padding: 5px; text-align: center; }
+    #punching th, #punching td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    #punching th { background-color: #f2f2f2; }
+    .chart-container { width: 300px; height: 350px; margin: auto; }
+    .flexbox{ display: flex; }
+    .search-container{ width: 100%; position: relative; display: none; margin:4vh 0 4vh 0 ;
+      justify-content: space-between; }
+    #searchID{ height: 5vh; border-radius: 20px; width: 92%; text-indent: 40px; }
+    .searchicon{ position: absolute; left: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    body{ margin-top: 24vh; height: fit-content; }
+    .pagination {
+      display: none;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      border: none;
+      background-color: #343a40;
+      color: white;
+      cursor: pointer;
+    }
+    .pagination button.disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .btn{
+      background-color: #600000;
+      color: white;
+      height: 4.5vh;
+      width: 5vw;
+      border-radius: 10px;
+
+    }
+    #time1, #time2{
+      width: 100px;
+      height: 30px;
+      font-size: 1rem;
+      text-align: center;
+      border-radius: 10px;
+      border-color:#600000;
+    }
+    .form{
+      display: flex;
+      align-items: center;
+      width: 40%;
+      justify-content: space-evenly;
+    }
+    .download,.submit{
+      text-decoration: none;
+      border-radius: 20px;
+      padding: 11px;
+      color: white;
+      background-color: red;
+    }
+    #filterForm {
+      font-style: oblique;
+      font-family;
+      margin-bottom: 5vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+    }
+
+    input[type='date'] {
+      background-color: #0080ff;
+      font-family: "Roboto Mono", monospace;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      outline: none;
+      text-align: center;
+      width: 10vw;
+      border-radius: 5px;
+      color: white;
+      margin-left: 5px;
+    }
+    ::-webkit-calendar-picker-indicator {
+      background-color: white;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+  </style>
+  <link rel="stylesheet" href="../public/css/navstyle.css">
+</head>
+<body>
+  {{>navbar2}}
+  <section id="punching">
+    <h1>Punching Data</h1>
+    <br><br>
+    {{!-- <div class="flexbox">
+      <div class="chart-container">
+          <h2>Late After Time 1</h2>
+          <canvas id="lateAfterTime1Chart" width="300" height="300"></canvas>
+      </div>
+      <div class="chart-container">
+          <h2>Late After Time 2</h2>
+          <canvas id="lateAfterTime2Chart" width="300" height="300"></canvas>
+      </div>
+    </div> --}}
+    <br><br>
+    <form id="filterForm" method="GET" action="/punching" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">
+      <div class="formflex" style="display: flex;">
+      <label for="location" style="font-size: 1.2rem; margin-top:1.2vh; margin-right:10px">Select Site:</label>
+      <select id="location" name="site" style="border-radius: 20px;">
+        <option value="">Choose site</option>
+        <!-- Add location options dynamically -->
+        {{#each sites}}
+          <option value="{{this.site_name}}" {{#ifEquals this.site_name ../selectedLocation}}selected{{/ifEquals}}>{{this.site_name}}</option>
+        {{/each}}
+      </select>
+      <div>
+        <label for="fromDate" style="margin-left: 10px;">From Date:</label>
+        <input type="date" id="fromDate" name="fromDate" value="2024-12-12" required>
+      </div>
+      <div>
+        <label for="toDate" style="margin-left: 10px;">To Date:</label>
+        <input type="date" id="toDate" name="toDate" value="{{toDate}}" required>
+      </div>
+</div>
+<br>
+<div class="timeform">
+   <label for="time1" style="font-size: 1.3rem;">Time 1:</label>
+      <input type="time" id="time1" value="{{time1}}" name="time1" />
+      <label for="time2" style="font-size: 1.3rem;">Time 2:</label>
+      <input type="time" id="time2" name="time2" value="{{time2}}" />
+</div>
+<br>
+      <button type="submit" class="download" style="cursor: pointer;">Generate Report</button>
+    </form>
+    <div class="search-container">
+        <input type="text" id="searchID" placeholder="Enter ID">
+        <span class="searchicon"><i class="fa-solid fa-magnifying-glass"></i></span>
+    {{!-- <a href="#" id="download-link" class="download">Download</a> --}}
+    </div>
+    
+    <table id="datatable" style="display: none;">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0,this)">ID <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(1,this)">Name <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(2,this)">designation <span class="sort-icon">▲▼</span></th>
+          {{!-- <th>Section</th>
+          <th>Level</th> --}}
+          <th onclick="sortTable(3,this)">Department <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(4,this)">Punch Date & Time <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(5,this)">Is Late after Time 1? <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(6,this)">Delayed from Time 1 <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(7,this)">Is Late after Time 2? <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(8,this)">Delayed from Time 2 <span class="sort-icon">▲▼</span></th>
+          <th onclick="sortTable(9,this)">DOWeek</th>
+        </tr>
+      </thead>
+      <tbody id="punching-table-body">
+        {{#each data}}
+          <tr>
+            <td>{{this.employee_id}}</td>
+            <td>{{this.first_name}}</td>
+            <td>{{this.employee_designation_type_name}}</td>
+            <td>{{this.department_name}}</td>
+            {{!-- <td>{{this.Section}}</td>
+            <td>{{this.Level}}</td> --}}
+            <td>{{this.rec_timestamp}}</td>
+            <td>{{this.IsLateAfterTime1}}</td>
+            <td>{{this.DelayedFromTime1}}</td>
+            <td>{{this.IsLateAfterTime2}}</td>
+            <td>{{this.DelayedFromTime2}}</td>
+            <td>{{this.DOWeek}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    
+    <div class="pagination">
+      <button id="prevBtn" class="disabled" onclick="prevPage()">Previous</button>
+      <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+    
+    
+  </section>
+
+  {{>footer}}
+
+
+<script>
+const rowsPerPage = 20;
+let currentPage = 1;
+const tableBody = document.getElementById('punching-table-body');
+const rows = Array.from(tableBody.getElementsByTagName('tr'));
+let filteredRows = [...rows]; // This will store the filtered rows
+let sortedRows = [...filteredRows]; // This will store the sorted version of filtered rows
+
+// Function to calculate the total number of pages
+function getTotalPages() {
+  return Math.ceil(sortedRows.length / rowsPerPage);
+}
+
+// Function to display rows on the current page
+function displayPage(page) {
+  tableBody.innerHTML = '';
+  const start = (page - 1) * rowsPerPage;
+  const end = Math.min(start + rowsPerPage, sortedRows.length);
+
+  for (let i = start; i < end; i++) {
+    tableBody.appendChild(sortedRows[i]);
+  }
+
+  document.getElementById('prevBtn').classList.toggle('disabled', page === 1);
+  document.getElementById('nextBtn').classList.toggle('disabled', page === getTotalPages());
+}
+
+// Pagination control functions
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayPage(currentPage);
+  }
+}
+
+function nextPage() {
+  if (currentPage < getTotalPages()) {
+    currentPage++;
+    displayPage(currentPage);
+  }
+}
+
+// Function to sort the table
+function sortTable(columnIndex, headerElement) {
+  const dir = headerElement.dataset.sortDir === 'desc' ? 'asc' : 'desc';
+  headerElement.dataset.sortDir = dir;
+
+  const isNumeric = (value) => !isNaN(value) && value.trim() !== '';
+  const isTime = (value) => value.includes(':');
+
+  sortedRows.sort((a, b) => {
+    const xContent = a.getElementsByTagName('TD')[columnIndex].textContent.trim();
+    const yContent = b.getElementsByTagName('TD')[columnIndex].textContent.trim();
+
+    let comparison = 0;
+
+    if (isNumeric(xContent) && isNumeric(yContent)) {
+      comparison = parseFloat(xContent) - parseFloat(yContent);
+    } else if (isTime(xContent) && isTime(yContent)) {
+      const xTime = new Date('1970-01-01T' + xContent + 'Z').getTime();
+      const yTime = new Date('1970-01-01T' + yContent + 'Z').getTime();
+      comparison = xTime - yTime;
+    } else {
+      comparison = xContent.localeCompare(yContent);
+    }
+
+    return dir === 'asc' ? comparison : -comparison;
+  });
+
+  // Reset all header icons
+  document.querySelectorAll("#datatable th .sort-icon").forEach(icon => {
+    icon.textContent = "▲▼";
+  });
+
+  // Update the header icon based on the sorting direction
+  const icon = headerElement.querySelector(".sort-icon");
+  icon.textContent = dir === 'asc' ? "▲" : "▼";
+
+  displayPage(currentPage); // Redisplay the sorted rows on the current page
+}
+
+// Function to handle search
+document.getElementById('searchID').addEventListener('input', function () {
+  const searchValue = this.value.toLowerCase();
+  filteredRows = rows.filter(row => {
+    const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    const designation = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+    const department = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+
+    return id.includes(searchValue) || name.includes(searchValue) || designation.includes(searchValue) || department.includes(searchValue);
+  });
+
+  sortedRows = [...filteredRows]; // Update sortedRows to match the filteredRows
+  
+  currentPage = 1; // Reset to the first page
+  displayPage(currentPage); // Display the first page of filtered results
+  document.getElementById('prevBtn').classList.add('disabled');
+  document.getElementById('nextBtn').classList.toggle('disabled', sortedRows.length <= rowsPerPage);
+});
+
+// Initial display of the first page
+displayPage(currentPage);
+</script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const time1 = urlParams.get('time1') || '10:00:00';
+      const time2 = urlParams.get('time2') || '10:15:00';
+
+      // Construct the download link with the appropriate query parameters
+      const downloadLink = `/download/punching?time1=${encodeURIComponent(time1)}&time2=${encodeURIComponent(time2)}`;
+
+      // Update the href attribute of the download link
+      document.getElementById('download-link').href = downloadLink;
+    });
+  </script>
+
+  <script>
+     document.addEventListener('DOMContentLoaded', function() {
+    // Function to get query parameters
+    function getQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        const queryParams = {};
+        for (const [key, value] of params.entries()) {
+            queryParams[key] = value;
+        }
+        return queryParams;
+    }
+
+    // Function to handle display based on query parameters
+    function handleDisplayBasedOnParams() {
+        const queryParams = getQueryParams();
+        {{!-- const statsSection = document.querySelector('.stats'); --}}
+        {{!-- const timeform = document.querySelector('.timeform'); --}}
+        const search = document.querySelector('.search-container');
+        const pagination = document.querySelector('.pagination');
+        const hr = document.querySelector('.hr');
+        const datatable = document.getElementById('datatable');
+
+        if (Object.keys(queryParams).length > 0) {
+            // Show elements if query parameters exist
+            {{!-- statsSection.style.display = 'grid'; --}}
+            {{!-- timeform.style.display = 'block'; --}}
+            search.style.display = 'block';
+            pagination.style.display = 'flex';
+            datatable.style.display = 'block';
+            hr.style.display = 'block';
+        } else {
+            // Hide elements if no query parameters
+            {{!-- statsSection.style.display = 'none'; --}}
+            {{!-- timeform.style.display = 'none'; --}}
+            search.style.display = 'none';
+            pagination.style.display = 'none';
+            datatable.style.display = 'none';
+            hr.style.display = 'none';
+        }
+    }
+
+    // Call the function to handle display
+    handleDisplayBasedOnParams();
+});
+
+
+function getURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    location: params.get('site') || '',
+    fromdate: params.get('fromdate') || '',
+    todate: params.get('todate') || ''
+  };
+}
+
+window.onload = function() {
+  const params = getURLParams();
+  document.getElementById('location').value = params.location;
+  document.getElementById('fromDate').value = params.fromdate;
+  document.getElementById('toDate').value = params.todate;
+};
+
+function submitTimeParameters() {
+  
+const params = getURLParams();
+  
+  // Get the values from the time parameters inputs
+  const time1 = encodeURIComponent(document.getElementById('time1').value);
+  const time2 = encodeURIComponent(document.getElementById('time2').value);
+  
+  // Construct the updated URL
+  const updatedUrl = `/punching?site=${params.location}&fromDate=${params.fromDate}&toDate=${params.toDate}&time1=${time1}&time2=${time2}`;
+
+  // Redirect to the updated URL
+  window.location.href = updatedUrl;
+}
+
+const fromdate =document.querySelector('#toDate').value
+
+console.log(typeof(fromdate))
+const dateInput = document.querySelector('#toDate');
+    dateInput.value = fromDate;
+</script> 
+
+
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Master</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    body {
+      margin-top: 28vh;
+    }
+    .search-container {
+      width: 100%;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      margin: 4vh 0 4vh 0;
+    }
+    #searchID {
+      height: 5vh;
+      border-radius: 20px;
+      width: 92%;
+      text-indent: 40px;
+    }
+    .download{
+      text-decoration: none;
+      border-radius: 20px;
+      padding: 11px;
+      color: white;
+      background-color: red;
+    }
+    .searchicon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #emp_master {
+      margin: 20px auto;
+      width: 80%;
+      border-collapse: collapse;
+    }
+    #emp_master h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+    #emp_master table {
+      width: 100%;
+      border: 1px solid #ddd;
+    }
+    #emp_master caption {
+      font-weight: bold;
+      padding: 5px;
+      text-align: left;
+    }
+    #emp_master th,
+    #emp_master td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    #emp_master th {
+      background-color: #f2f2f2;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      border: none;
+      background-color: #343a40;
+      color: white;
+      cursor: pointer;
+    }
+    .pagination button.disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+      #filterForm {
+      font-style: oblique;
+      font-family;
+      margin-bottom: 5vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+    }
+  </style>
+</head>
+<body>
+  {{>navbar2}}
+<section id="emp_master">
+  <h2>Employee Data</h2>
+  <div id="form-container">
+    <form id="filterForm" method="GET" action="/emp_master">
+      <div class="formflex">
+        <label for="location">Select Site:</label>
+        <select id="location" name="site">
+          <option value="">Choose site</option>
+          {{#each sites}}
+            <option value="{{this.site_name}}" {{#ifEquals this.site_name ../selectedLocation}}selected{{/ifEquals}}>{{this.site_name}}</option>
+          {{/each}}
+        </select>
+        <button type="submit" class="download">SUBMIT</button>
+      </div>
+    </form>
+  </div>
+  <div class="search-container">
+    <input type="text" id="searchID" placeholder="Enter ID or Name">
+    <span class="searchicon"><i class="fa-solid fa-magnifying-glass"></i></span>
+    <a href="/download/emp_master" class="download">Download</a>
+  </div>
+  <table id="datatable">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0,this)">ID<span class="sort-icon">▲▼</span></th>
+        <th onclick="sortTable(1,this)">Name<span class="sort-icon">▲▼</span></th>
+        <th onclick="sortTable(2,this)">Designation<span class="sort-icon">▲▼</span></th>
+        <th onclick="sortTable(3,this)">Department<span class="sort-icon">▲▼</span></th>
+      </tr>
+    </thead>
+    <tbody id="emp_master-table-body">
+      {{#each employees}}
+        <tr>
+          <td>{{this.employee_id}}</td>
+          <td>{{this.first_name}}</td>
+          <td>{{this.employee_designation_type_name}}</td>
+          <td>{{this.department_name}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  <div class="pagination">
+    <button id="prevBtn" class="disabled" onclick="prevPage()">Previous</button>
+    <button id="nextBtn" onclick="nextPage()">Next</button>
+  </div>
+</section>
+
+  {{>footer}}
+<script>
+const rowsPerPage = 20;
+let currentPage = 1;
+const tableBody = document.getElementById('emp_master-table-body');
+console.log(tableBody)
+const rows = Array.from(tableBody.getElementsByTagName('tr'));
+let filteredRows = [...rows]; // This will store the filtered rows
+let sortedRows = [...filteredRows]; // This will store the sorted version of filtered rows
+
+// Function to calculate the total number of pages
+function getTotalPages() {
+  return Math.ceil(sortedRows.length / rowsPerPage);
+}
+
+// Function to display rows on the current page
+function displayPage(page) {
+  tableBody.innerHTML = '';
+  const start = (page - 1) * rowsPerPage;
+  const end = Math.min(start + rowsPerPage, sortedRows.length);
+
+  for (let i = start; i < end; i++) {
+    tableBody.appendChild(sortedRows[i]);
+  }
+
+  document.getElementById('prevBtn').classList.toggle('disabled', page === 1);
+  document.getElementById('nextBtn').classList.toggle('disabled', page === getTotalPages());
+}
+
+// Pagination control functions
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayPage(currentPage);
+  }
+}
+
+function nextPage() {
+  if (currentPage < getTotalPages()) {
+    currentPage++;
+    displayPage(currentPage);
+  }
+}
+
+// Function to sort the table
+function sortTable(columnIndex, headerElement) {
+  const dir = headerElement.dataset.sortDir === 'desc' ? 'asc' : 'desc';
+  headerElement.dataset.sortDir = dir;
+
+  const isNumeric = (value) => !isNaN(value) && value.trim() !== '';
+  const isTime = (value) => value.includes(':');
+
+  sortedRows.sort((a, b) => {
+    const xContent = a.getElementsByTagName('TD')[columnIndex].textContent.trim();
+    const yContent = b.getElementsByTagName('TD')[columnIndex].textContent.trim();
+
+    let comparison = 0;
+
+    if (isNumeric(xContent) && isNumeric(yContent)) {
+      comparison = parseFloat(xContent) - parseFloat(yContent);
+    } else if (isTime(xContent) && isTime(yContent)) {
+      const xTime = new Date('1970-01-01T' + xContent + 'Z').getTime();
+      const yTime = new Date('1970-01-01T' + yContent + 'Z').getTime();
+      comparison = xTime - yTime;
+    } else {
+      comparison = xContent.localeCompare(yContent);
+    }
+
+    return dir === 'asc' ? comparison : -comparison;
+  });
+
+  // Reset all header icons
+  document.querySelectorAll("#datatable th .sort-icon").forEach(icon => {
+    icon.textContent = "▲▼";
+  });
+
+  // Update the header icon based on the sorting direction
+  const icon = headerElement.querySelector(".sort-icon");
+  icon.textContent = dir === 'asc' ? "▲" : "▼";
+
+  displayPage(currentPage); // Redisplay the sorted rows on the current page
+}
+
+// Function to handle search
+document.getElementById('searchID').addEventListener('input', function () {
+  const searchValue = this.value.toLowerCase();
+  filteredRows = rows.filter(row => {
+    const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    const section = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+    return id.includes(searchValue) || name.includes(searchValue) || section.includes(searchValue);
+  });
+
+  sortedRows = [...filteredRows]; // Update sortedRows to match the filteredRows
+  
+  currentPage = 1; // Reset to the first page
+  displayPage(currentPage); // Display the first page of filtered results
+  document.getElementById('prevBtn').classList.add('disabled');
+  document.getElementById('nextBtn').classList.toggle('disabled', sortedRows.length <= rowsPerPage);
+});
+
+// Initial display of the first page
+displayPage(currentPage);
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
